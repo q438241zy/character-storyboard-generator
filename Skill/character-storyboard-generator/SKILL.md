@@ -76,6 +76,8 @@ Every task must have a stable `task_id`, prompt, relative output path, status, a
 
 Keep the user-facing result area simple: `成果/{emotion_category_zh}-{expression_label_zh}/{filename}`. Do not create empty category folders. Keep manifests and rejected attempts outside `成果` so users browsing pictures never encounter technical files.
 
+Never reduce the pose or expression catalogs merely to simplify folders. V1.0 retains all 30 pose IDs and 40 expression IDs; folder compression changes navigation only, not the available creative combinations. Prioritize generating multiple expressions for `P01-standing-neutral` whenever the user asks for a representative sample set.
+
 ## Completion criteria
 
 Finish only when:

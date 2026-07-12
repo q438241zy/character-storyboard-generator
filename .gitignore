@@ -1,0 +1,5 @@
+/.tmp-skill-validator/
+/Sample/_chroma/
+**/__pycache__/
+*.pyc
+/happy.png
