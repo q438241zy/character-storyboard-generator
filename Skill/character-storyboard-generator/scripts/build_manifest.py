@@ -46,6 +46,14 @@ def validate_catalog(items, prefix):
         seen.add(item["id"])
 
 
+STYLE_LOCK = (
+    "Art style: Japanese chibi anime style (in the general vein of Himouto! Umaru-chan): "
+    "2-3 heads tall, oversized head, large simple expressive eyes, tiny simplified hands and feet, "
+    "clean thin line art, flat cel-shaded colors with minimal soft shading, rounded cute silhouette. "
+    "Reference ONLY the single approved identity image; do not blend styles from any other image."
+)
+
+
 def prompt_for(project, pose, expression):
     medium = (
         "Preserve the exact animation character design from the approved identity reference."
@@ -64,11 +72,13 @@ def prompt_for(project, pose, expression):
     )
     return " ".join([
         medium,
+        STYLE_LOCK,
         f"Pose: {pose['prompt']}.",
         f"Expression: {expression['prompt']}.",
         "Exactly one character, full body visible, generous padding, readable silhouette.",
         "Keep face, hairstyle, outfit, palette, accessories, and proportions identical to the approved reference.",
-        "No captions, speech bubbles, props, extra limbs, watermark, or background scene.",
+        "No captions, speech bubbles, props, extra limbs, watermark, logo, signature, or background scene.",
+        "Completely watermark-free output even if the source carried one.",
         minor_lock,
         alpha,
     ])

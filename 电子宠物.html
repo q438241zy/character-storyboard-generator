@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>福杰家电子小宠物</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+  @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+  @keyframes heartFloat {
+    0% { opacity:1; transform: translateY(0) scale(1); }
+    100% { opacity:0; transform: translateY(-80px) scale(1.5); }
+  }
+  @keyframes zzz {
+    0% { opacity:0; transform: translate(0,0) scale(0.5); }
+    50% { opacity:1; }
+    100% { opacity:0; transform: translate(20px,-40px) scale(1.2); }
+  }
+  @keyframes sparkle {
+    0%,100% { opacity:0; transform: scale(0) rotate(0deg); }
+    50% { opacity:1; transform: scale(1) rotate(180deg); }
+  }
+
+  body {
+    font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #e0e0e0;
+    overflow: hidden;
+  }
+
+  .pet-container {
+    width: 480px;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    position: relative;
+  }
+
+  /* Character selector */
+  .char-selector {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .char-btn {
+    padding: 8px 24px;
+    border-radius: 20px;
+    border: 2px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.05);
+    color: #aaa;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s;
+  }
+  .char-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .char-btn.active-yor {
+    border-color: #e74c3c;
+    background: rgba(231,76,60,0.2);
+    color: #ff6b6b;
+    box-shadow: 0 0 20px rgba(231,76,60,0.2);
+  }
+  .char-btn.active-loid {
+    border-color: #2ecc71;
+    background: rgba(46,204,113,0.2);
+    color: #5dde9e;
+    box-shadow: 0 0 20px rgba(46,204,113,0.2);
+  }
+
+  /* Pet display area */
+  .pet-stage {
+    width: 100%;
+    height: 320px;
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.08) 0%, transparent 70%);
+    border-radius: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .pet-img {
+    max-height: 280px;
+    max-width: 260px;
+    animation: float 3s ease-in-out infinite;
+    transition: all 0.5s;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+    image-rendering: auto;
+  }
+  .pet-img.interact { animation: shake 0.4s ease-in-out; }
+  .pet-img.sleeping { animation: none; opacity: 0.7; }
+
+  /* Floating effects */
+  .effect-container {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .heart {
+    position: absolute;
+    font-size: 24px;
+    animation: heartFloat 1.5s ease-out forwards;
+  }
+  .zzz {
+    position: absolute;
+    font-size: 20px;
+    color: #a0c4ff;
+    animation: zzz 2s ease-out forwards;
+  }
+  .sparkle-emoji {
+    position: absolute;
+    font-size: 18px;
+    animation: sparkle 1s ease-in-out forwards;
+  }
+
+  /* Mood label */
+  .mood-label {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.5);
+    padding: 4px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    color: #ccc;
+    white-space: nowrap;
+  }
+
+  /* Stats */
+  .stats {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .stat-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .stat-icon { font-size: 18px; width: 24px; text-align: center; }
+  .stat-label { font-size: 12px; color: #999; width: 48px; }
+  .stat-bar-bg {
+    flex: 1;
+    height: 12px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .stat-bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.5s ease, background 0.5s;
+  }
+  .stat-bar-fill.hunger { background: linear-gradient(90deg, #e74c3c, #f39c12); }
+  .stat-bar-fill.happiness { background: linear-gradient(90deg, #f39c12, #f1c40f); }
+  .stat-bar-fill.energy { background: linear-gradient(90deg, #3498db, #2ecc71); }
+  .stat-value { font-size: 12px; color: #aaa; width: 36px; text-align: right; }
+
+  /* Action buttons */
+  .actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .action-btn {
+    padding: 12px 8px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.06);
+    color: #ddd;
+    cursor: pointer;
+    font-size: 13px;
+    text-align: center;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .action-btn:hover {
+    background: rgba(255,255,255,0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+  .action-btn:active { transform: translateY(0); }
+  .action-btn .icon { font-size: 22px; }
+  .action-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Message log */
+  .message-log {
+    height: 60px;
+    overflow-y: auto;
+    background: rgba(0,0,0,0.2);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #aaa;
+    line-height: 1.6;
+  }
+  .message-log::-webkit-scrollbar { width: 4px; }
+  .message-log::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+  .msg { animation: slideUp 0.3s ease; }
+  .msg-time { color: #666; margin-right: 6px; }
+
+  /* Time display */
+  .time-display {
+    text-align: center;
+    font-size: 11px;
+    color: #666;
+    margin-top: 8px;
+  }
+
+  /* Warning flash */
+  .stat-warning { animation: pulse 1s infinite; }
+</style>
+</head>
+<body>
+
+<div class="pet-container">
+  <!-- Character Selector -->
+  <div class="char-selector">
+    <button class="char-btn active-yor" id="btn-yor" onclick="switchChar('yor')">约尔</button>
+    <button class="char-btn" id="btn-loid" onclick="switchChar('loid')">劳埃德</button>
+  </div>
+
+  <!-- Pet Stage -->
+  <div class="pet-stage" id="petStage">
+    <img class="pet-img" id="petImg" src="" alt="pet" onerror="this.style.display='none'">
+    <div class="effect-container" id="effects"></div>
+    <div class="mood-label" id="moodLabel">加载中...</div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-row">
+      <span class="stat-icon">🍖</span>
+      <span class="stat-label">饱食</span>
+      <div class="stat-bar-bg"><div class="stat-bar-fill hunger" id="barHunger" style="width:80%"></div></div>
+      <span class="stat-value" id="valHunger">80</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-icon"></span>
+      <span class="stat-label">心情</span>
+      <div class="stat-bar-bg"><div class="stat-bar-fill happiness" id="barHappiness" style="width:70%"></div></div>
+      <span class="stat-value" id="valHappiness">70</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-icon">⚡</span>
+      <span class="stat-label">精力</span>
+      <div class="stat-bar-bg"><div class="stat-bar-fill energy" id="barEnergy" style="width:90%"></div></div>
+      <span class="stat-value" id="valEnergy">90</span>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="actions">
+    <button class="action-btn" onclick="doAction('feed')">
+      <span class="icon">🍱</span><span>喂食</span>
+    </button>
+    <button class="action-btn" onclick="doAction('pet')">
+      <span class="icon">🤚</span><span>摸头</span>
+    </button>
+    <button class="action-btn" onclick="doAction('play')">
+      <span class="icon"></span><span>玩耍</span>
+    </button>
+    <button class="action-btn" onclick="doAction('rest')">
+      <span class="icon">😴</span><span>休息</span>
+    </button>
+    <button class="action-btn" onclick="doAction('talk')">
+      <span class="icon">💬</span><span>说话</span>
+    </button>
+    <button class="action-btn" onclick="doAction('praise')">
+      <span class="icon">👍</span><span>夸奖</span>
+    </button>
+    <button class="action-btn" onclick="doAction('scold')">
+      <span class="icon">😤</span><span>训斥</span>
+    </button>
+    <button class="action-btn" onclick="doAction('gift')">
+      <span class="icon"></span><span>礼物</span>
+    </button>
+  </div>
+
+  <!-- Message Log -->
+  <div class="message-log" id="msgLog"></div>
+  <div class="time-display" id="timeDisplay"></div>
+</div>
+
+<script>
+// ==================== CONFIG ====================
+const BASE_PATH = 'C:\\Users\\99000256\\Desktop\\AI人物设计';
+
+const CHARS = {
+  yor: {
+    id: 'yor-forger',
+    name: '约尔',
+    nameEn: 'Yor',
+    color: '#e74c3c',
+    messages: {
+      feed: ['约尔开心地吃了起来~', '谢谢你的食物！', '好好吃呀~', '约尔露出了幸福的笑容'],
+      pet: ['约尔害羞地低下了头...', '约尔的脸微微泛红', '约尔开心地眯起了眼睛', '约尔轻轻蹭了蹭你的手'],
+      play: ['约尔兴奋地跳了起来！', '再来一次！再来一次！', '约尔玩得好开心~', '约尔露出了调皮的笑容'],
+      rest: ['约尔安静地休息了...', '约尔闭上了眼睛，看起来很放松', '约尔打了个哈欠...', '约尔进入了梦乡~'],
+      talk: ['约尔歪着头听你说话', '约尔认真地回应了你', '约尔微笑着点了点头', '约尔似乎在思考什么...'],
+      praise: ['约尔得意地挺起了胸膛！', '约尔开心地笑了~', '约尔害羞但很高兴', '约尔露出了自信的笑容'],
+      scold: ['约尔委屈地低下了头...', '约尔眼眶有点红了...', '约尔默默地站着不说话', '约尔看起来很伤心...'],
+      gift: ['约尔眼睛闪闪发光！', '约尔开心地收下了礼物~', '约尔惊喜地叫了出来！', '约尔紧紧抱着礼物不肯放手'],
+      hungry: ['约尔的肚子咕咕叫了...', '约尔看起来好饿...', '约尔用期待的眼神看着你'],
+      tired: ['约尔好困啊...', '约尔的眼睛快睁不开了...', '约尔想睡觉了...'],
+      sad: ['约尔看起来不太开心...', '约尔默默地坐在一边...', '约尔需要你的关心...'],
+      idle: ['约尔安静地站着', '约尔在发呆...', '约尔四处张望', '约尔整理了一下头发']
+    }
+  },
+  loid: {
+    id: 'loid-forger',
+    name: '劳埃德',
+    nameEn: 'Loid',
+    color: '#2ecc71',
+    messages: {
+      feed: ['劳埃德优雅地用餐', '谢谢，味道不错', '劳埃德微微点头表示满意', '劳埃德认真地吃完了食物'],
+      pet: ['劳埃德有些不自在地别过脸...', '劳埃德耳根微微泛红', '劳埃德假装不在意但其实很开心', '劳埃德轻轻叹了口气'],
+      play: ['劳埃德难得露出了笑容', '劳埃德认真地参与了游戏', '劳埃德露出了孩子气的一面', '劳埃德玩得很投入'],
+      rest: ['劳埃德闭目养神...', '劳埃德终于可以休息了', '劳埃德放松了紧绷的神经', '劳埃德安静地睡着了'],
+      talk: ['劳埃德认真地听着', '劳埃德给出了专业的建议', '劳埃德若有所思地点头', '劳埃德微笑着回应'],
+      praise: ['劳埃德露出了难得的得意笑容', '劳埃德谦虚地笑了笑', '劳埃德微微扬起下巴', '劳埃德眼中闪过一丝喜悦'],
+      scold: ['劳埃德面无表情地站着...', '劳埃德冷冷地看着你', '劳埃德沉默不语', '劳埃德的眼神变得锐利'],
+      gift: ['劳埃德有些意外地接过礼物', '劳埃德露出了温柔的微笑', '劳埃德认真地端详着礼物', '劳埃德眼中闪过感动'],
+      hungry: ['劳埃德看了看时间，该吃饭了', '劳埃德的肚子微微叫了一声...', '劳埃德保持着优雅但眼神飘向厨房'],
+      tired: ['劳埃德揉了揉太阳穴...', '劳埃德打了个哈欠', '劳埃德需要休息一下了'],
+      sad: ['劳埃德沉默地望向远方...', '劳埃德的表情变得凝重', '劳埃德需要一些独处的时间'],
+      idle: ['劳埃德整理了一下领带', '劳埃德在思考任务', '劳埃德保持着标准的站姿', '劳埃德环顾四周']
+    }
+  }
+};
+
+// Expression to folder mapping
+const EXPR_MAP = {
+  joy:          { folder: '喜-开心',       slug: 'E01-joy' },
+  anger:        { folder: '怒-愤怒',       slug: 'E02-anger' },
+  sadness:      { folder: '哀-哀伤',       slug: 'E03-sadness' },
+  laughter:     { folder: '乐-开怀大笑',   slug: 'E04-laughter' },
+  surprise:     { folder: '惊-震惊',       slug: 'E05-surprise' },
+  aggrieved:    { folder: '哀-委屈',       slug: 'E07-aggrieved' },
+  crying:       { folder: '哀-哭泣',       slug: 'E09-crying' },
+  mischievous:  { folder: '乐-古灵精怪',   slug: 'E16-mischievous' },
+  acting_cute:  { folder: '喜-装可爱',     slug: 'E17-acting-cute' },
+  disgust:      { folder: '厌-嫌弃',       slug: 'E18-disgust' },
+  neutral:      { folder: '静-平静',       slug: 'E21-neutral' },
+  speechless:   { folder: '静-无语',       slug: 'E22-speechless' },
+  silent_anger: { folder: '怒-面无表情地生气', slug: 'E24-silent-anger' },
+  shy:          { folder: '羞-害羞',       slug: 'E25-shy' },
+  proud:        { folder: '喜-得意',       slug: 'E27-proud' },
+  smug:         { folder: '乐-坏笑',       slug: 'E28-smug' },
+  confused:     { folder: '静-疑惑',       slug: 'E29-confused' },
+  relieved:     { folder: '喜-如释重负',   slug: 'E34-relieved' },
+  determined:   { folder: '静-坚定',       slug: 'E35-determined' },
+  sparkling:    { folder: '喜-星星眼期待', slug: 'E40-sparkling-eyes' },
+  pleading:     { folder: '哀-恳求',       slug: 'E33-pleading' }
+};
+
+// Available poses per character (will be populated dynamically)
+let availablePoses = { yor: [], loid: [] };
+let availableExprs = { yor: {}, loid: {} };
+
+// ==================== STATE ====================
+let state = {
+  char: 'yor',
+  hunger: 80,
+  happiness: 70,
+  energy: 90,
+  currentExpr: 'neutral',
+  currentPose: 'P01-standing-neutral',
+  isSleeping: false,
+  lastInteraction: Date.now()
+};
+
+// ==================== INIT ====================
+function init() {
+  discoverImages();
+  updateDisplay();
+  startGameLoop();
+  addMsg('系统', '福杰家电子小宠物启动！选择你的角色开始互动吧~');
+}
+
+function discoverImages() {
+  // Pre-define the mapping of what we know exists
+  const poseList = [
+    'P01-standing-neutral', 'P02-standing-attention', 'P03-hands-on-hips',
+    'P06-wave-goodbye', 'P08-thumbs-up', 'P16-seiza', 'P17-cross-legged',
+    'P20-lazy-prone', 'P22-lying-supine', 'P25-dogeza-prostrate', 'P30-victory-sign'
+  ];
+
+  for (const charKey of ['yor', 'loid']) {
+    const char = CHARS[charKey];
+    availablePoses[charKey] = [];
+    availableExprs[charKey] = {};
+
+    for (const pose of poseList) {
+      for (const [exprKey, exprInfo] of Object.entries(EXPR_MAP)) {
+        const filename = `${char.id}__${pose}__${exprInfo.slug}__v01__v1.0.png`;
+        const folderPath = `${BASE_PATH}\\${charKey === 'yor' ? '约尔' : '劳埃德'}\\成果\\${exprInfo.folder}\\${filename}`;
+        // We'll try to load and cache these
+        if (!availableExprs[charKey][exprKey]) {
+          availableExprs[charKey][exprKey] = [];
+        }
+        availableExprs[charKey][exprKey].push({
+          pose: pose,
+          path: folderPath,
+          filename: filename
+        });
+      }
+      availablePoses[charKey].push(pose);
+    }
+  }
+}
+
+// ==================== IMAGE LOADING ====================
+function getImagePath(exprKey, poseKey) {
+  const charKey = state.char;
+  const exprs = availableExprs[charKey][exprKey];
+  if (!exprs || exprs.length === 0) return null;
+
+  // Try to find matching pose first
+  let match = exprs.find(e => e.pose === poseKey);
+  if (match) return match.path;
+
+  // Fall back to any available pose for this expression
+  return exprs[0].path;
+}
+
+function getRandomPose() {
+  const poses = availablePoses[state.char];
+  return poses[Math.floor(Math.random() * poses.length)];
+}
+
+function setExpression(exprKey, poseKey) {
+  state.currentExpr = exprKey;
+  if (poseKey) state.currentPose = poseKey;
+  else state.currentPose = getRandomPose();
+
+  const path = getImagePath(exprKey, state.currentPose);
+  const img = document.getElementById('petImg');
+
+  if (path) {
+    img.style.display = 'block';
+    // Use file:// protocol for local files
+    const fileUrl = 'file:///' + path.replace(/\\/g, '/');
+    img.src = fileUrl;
+    img.onerror = function() {
+      // Try without specific pose
+      const fallback = getImagePath(exprKey, null);
+      if (fallback && fallback !== path) {
+        img.src = 'file:///' + fallback.replace(/\\/g, '/');
+      } else {
+        img.style.display = 'none';
+      }
+    };
+  } else {
+    img.style.display = 'none';
+  }
+
+  updateMoodLabel();
+}
+
+// ==================== MOOD SYSTEM ====================
+function getMood() {
+  const { hunger, happiness, energy } = state;
+
+  if (state.isSleeping) return { expr: 'neutral', label: '💤 正在休息...', mood: 'sleep' };
+  if (hunger < 20) return { expr: 'sadness', label: '🍖 好饿啊...', mood: 'hungry' };
+  if (energy < 20) return { expr: 'sadness', label: '😴 好困啊...', mood: 'tired' };
+  if (happiness < 20) return { expr: 'crying', label: '😢 不开心...', mood: 'sad' };
+  if (hunger < 40) return { expr: 'sadness', label: ' 有点饿了', mood: 'hungry' };
+  if (energy < 40) return { expr: 'neutral', label: '😪 有点累了', mood: 'tired' };
+  if (happiness < 40) return { expr: 'sadness', label: '😔 心情不太好', mood: 'sad' };
+  if (happiness > 80 && hunger > 60 && energy > 60) return { expr: 'laughter', label: '😆 超级开心！', mood: 'great' };
+  if (happiness > 60) return { expr: 'joy', label: '😊 心情不错~', mood: 'good' };
+  return { expr: 'neutral', label: '😐 一般般', mood: 'normal' };
+}
+
+function updateMoodLabel() {
+  const mood = getMood();
+  document.getElementById('moodLabel').textContent = mood.label;
+
+  const img = document.getElementById('petImg');
+  if (mood.mood === 'sleep') {
+    img.classList.add('sleeping');
+  } else {
+    img.classList.remove('sleeping');
+  }
+}
+
+// ==================== ACTIONS ====================
+function doAction(action) {
+  if (state.isSleeping && action !== 'rest') {
+    addMsg('系统', `${CHARS[state.char].name}正在休息中，请不要打扰...`);
+    return;
+  }
+
+  state.lastInteraction = Date.now();
+  const char = CHARS[state.char];
+  const msgs = char.messages[action];
+  const msg = msgs[Math.floor(Math.random() * msgs.length)];
+
+  let expr = 'neutral';
+  let pose = null;
+  let effect = null;
+
+  switch (action) {
+    case 'feed':
+      state.hunger = Math.min(100, state.hunger + 25);
+      state.happiness = Math.min(100, state.happiness + 5);
+      expr = Math.random() > 0.5 ? 'joy' : 'laughter';
+      pose = 'P01-standing-neutral';
+      effect = 'sparkle';
+      break;
+    case 'pet':
+      state.happiness = Math.min(100, state.happiness + 15);
+      state.energy = Math.min(100, state.energy + 5);
+      expr = Math.random() > 0.5 ? 'shy' : 'joy';
+      pose = 'P01-standing-neutral';
+      effect = 'heart';
+      break;
+    case 'play':
+      if (state.energy < 15) {
+        addMsg('系统', `${char.name}太累了，玩不动了...`);
+        return;
+      }
+      state.happiness = Math.min(100, state.happiness + 20);
+      state.hunger = Math.max(0, state.hunger - 10);
+      state.energy = Math.max(0, state.energy - 15);
+      expr = Math.random() > 0.5 ? 'laughter' : 'mischievous';
+      pose = Math.random() > 0.5 ? 'P30-victory-sign' : 'P08-thumbs-up';
+      effect = 'sparkle';
+      break;
+    case 'rest':
+      if (state.isSleeping) {
+        state.isSleeping = false;
+        state.energy = Math.min(100, state.energy + 10);
+        addMsg('系统', `${char.name}醒来了！`);
+        expr = 'neutral';
+        pose = 'P01-standing-neutral';
+        updateDisplay();
+        setExpression(expr, pose);
+        return;
+      }
+      state.isSleeping = true;
+      state.energy = Math.min(100, state.energy + 30);
+      expr = 'neutral';
+      pose = 'P22-lying-supine';
+      effect = 'zzz';
+      break;
+    case 'talk':
+      state.happiness = Math.min(100, state.happiness + 8);
+      const talkExprs = ['neutral', 'joy', 'confused', 'surprise', 'determined'];
+      expr = talkExprs[Math.floor(Math.random() * talkExprs.length)];
+      pose = 'P01-standing-neutral';
+      break;
+    case 'praise':
+      state.happiness = Math.min(100, state.happiness + 18);
+      expr = Math.random() > 0.5 ? 'proud' : 'sparkling';
+      pose = Math.random() > 0.5 ? 'P03-hands-on-hips' : 'P02-standing-attention';
+      effect = 'sparkle';
+      break;
+    case 'scold':
+      state.happiness = Math.max(0, state.happiness - 20);
+      expr = Math.random() > 0.5 ? 'aggrieved' : 'crying';
+      pose = Math.random() > 0.5 ? 'P25-dogeza-prostrate' : 'P01-standing-neutral';
+      effect = null;
+      break;
+    case 'gift':
+      state.happiness = Math.min(100, state.happiness + 25);
+      state.hunger = Math.min(100, state.hunger + 10);
+      expr = Math.random() > 0.5 ? 'sparkling' : 'laughter';
+      pose = 'P30-victory-sign';
+      effect = 'heart';
+      break;
+  }
+
+  addMsg(char.name, msg);
+  updateDisplay();
+  setExpression(expr, pose);
+
+  // Animation
+  const img = document.getElementById('petImg');
+  img.classList.remove('interact');
+  void img.offsetWidth; // trigger reflow
+  img.classList.add('interact');
+  setTimeout(() => img.classList.remove('interact'), 500);
+
+  // Effects
+  if (effect) spawnEffect(effect);
+}
+
+// ==================== EFFECTS ====================
+function spawnEffect(type) {
+  const container = document.getElementById('effects');
+  const stage = document.getElementById('petStage');
+  const rect = stage.getBoundingClientRect();
+
+  for (let i = 0; i < 5; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      const x = 30 + Math.random() * 60;
+      const y = 20 + Math.random() * 40;
+
+      if (type === 'heart') {
+        el.className = 'heart';
+        el.textContent = ['❤️', '💕', '💖', '', '💗'][Math.floor(Math.random() * 5)];
+      } else if (type === 'zzz') {
+        el.className = 'zzz';
+        el.textContent = 'Z';
+        el.style.fontSize = (16 + Math.random() * 12) + 'px';
+      } else if (type === 'sparkle') {
+        el.className = 'sparkle-emoji';
+        el.textContent = ['✨', '⭐', '', '💫'][Math.floor(Math.random() * 4)];
+      }
+
+      el.style.left = x + '%';
+      el.style.top = y + '%';
+      container.appendChild(el);
+
+      setTimeout(() => el.remove(), 2000);
+    }, i * 200);
+  }
+}
+
+// ==================== DISPLAY ====================
+function updateDisplay() {
+  const { hunger, happiness, energy } = state;
+
+  document.getElementById('barHunger').style.width = hunger + '%';
+  document.getElementById('valHunger').textContent = Math.round(hunger);
+  document.getElementById('barHappiness').style.width = happiness + '%';
+  document.getElementById('valHappiness').textContent = Math.round(happiness);
+  document.getElementById('barEnergy').style.width = energy + '%';
+  document.getElementById('valEnergy').textContent = Math.round(energy);
+
+  // Warning states
+  document.getElementById('barHunger').parentElement.classList.toggle('stat-warning', hunger < 25);
+  document.getElementById('barHappiness').parentElement.classList.toggle('stat-warning', happiness < 25);
+  document.getElementById('barEnergy').parentElement.classList.toggle('stat-warning', energy < 25);
+
+  // Update char buttons
+  document.getElementById('btn-yor').className = 'char-btn' + (state.char === 'yor' ? ' active-yor' : '');
+  document.getElementById('btn-loid').className = 'char-btn' + (state.char === 'loid' ? ' active-loid' : '');
+
+  updateMoodLabel();
+}
+
+// ==================== CHARACTER SWITCH ====================
+function switchChar(charKey) {
+  state.char = charKey;
+  state.isSleeping = false;
+
+  // Reset stats for new character
+  state.hunger = 80;
+  state.happiness = 70;
+  state.energy = 90;
+
+  const char = CHARS[charKey];
+  addMsg('系统', `切换到了${char.name}！${char.name}向你打了个招呼~`);
+
+  updateDisplay();
+  setExpression('joy', 'P01-standing-neutral');
+}
+
+// ==================== GAME LOOP ====================
+function startGameLoop() {
+  // Stats decay every 5 seconds
+  setInterval(() => {
+    if (!state.isSleeping) {
+      state.hunger = Math.max(0, state.hunger - 1.5);
+      state.happiness = Math.max(0, state.happiness - 0.8);
+      state.energy = Math.max(0, state.energy - 0.5);
+    } else {
+      // Recover energy while sleeping
+      state.energy = Math.min(100, state.energy + 2);
+      state.hunger = Math.max(0, state.hunger - 0.5);
+      if (state.energy >= 100) {
+        state.isSleeping = false;
+        addMsg('系统', `${CHARS[state.char].name}休息好了，精神满满！`);
+      }
+    }
+
+    // Auto mood expressions
+    const mood = getMood();
+    if (mood.mood === 'hungry' && Math.random() < 0.3) {
+      const msgs = CHARS[state.char].messages.hungry;
+      addMsg(CHARS[state.char].name, msgs[Math.floor(Math.random() * msgs.length)]);
+    }
+    if (mood.mood === 'tired' && Math.random() < 0.3) {
+      const msgs = CHARS[state.char].messages.tired;
+      addMsg(CHARS[state.char].name, msgs[Math.floor(Math.random() * msgs.length)]);
+    }
+    if (mood.mood === 'sad' && Math.random() < 0.2) {
+      const msgs = CHARS[state.char].messages.sad;
+      addMsg(CHARS[state.char].name, msgs[Math.floor(Math.random() * msgs.length)]);
+    }
+
+    // Idle expressions
+    if (Math.random() < 0.1 && !state.isSleeping) {
+      const idleExprs = ['neutral', 'joy', 'speechless', 'confused'];
+      const idleExpr = idleExprs[Math.floor(Math.random() * idleExprs.length)];
+      setExpression(idleExpr);
+      if (Math.random() < 0.3) {
+        const msgs = CHARS[state.char].messages.idle;
+        addMsg(CHARS[state.char].name, msgs[Math.floor(Math.random() * msgs.length)]);
+      }
+    }
+
+    updateDisplay();
+  }, 5000);
+
+  // Time display
+  setInterval(() => {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    document.getElementById('timeDisplay').textContent = `当前时间 ${timeStr} | 福杰家电子宠物 v1.0`;
+  }, 1000);
+}
+
+// ==================== MESSAGES ====================
+function addMsg(sender, text) {
+  const log = document.getElementById('msgLog');
+  const now = new Date();
+  const time = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+
+  const div = document.createElement('div');
+  div.className = 'msg';
+  div.innerHTML = `<span class="msg-time">[${time}]</span><strong>${sender}：</strong>${text}`;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+
+  // Keep only last 50 messages
+  while (log.children.length > 50) {
+    log.removeChild(log.firstChild);
+  }
+}
+
+// ==================== START ====================
+window.onload = init;
+</script>
+</body>
+</html>

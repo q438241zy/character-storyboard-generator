@@ -17,6 +17,24 @@ Read only the files needed for the current step:
 - Read [references/naming-and-layout.md](references/naming-and-layout.md) before creating files or folders.
 - Read [references/prompt-and-qa.md](references/prompt-and-qa.md) before generating or reviewing images.
 
+## Art style lock
+
+All outputs use one fixed art style: **Japanese chibi anime style in the vein of "Himouto! Umaru-chan" (干物妹！うまる ちゃん)** — about 2–3 heads tall, oversized head, large simple expressive eyes, tiny simplified hands and feet, clean thin line art, flat cel-shaded colors with minimal soft shading, rounded cute silhouette. Do not imitate any specific copyrighted character; borrow only the general chibi proportions and rendering approach. Repeat this style description in every generation prompt. Never mix styles within one character set.
+
+## Single identity reference rule
+
+Style drift happens when generation references several source images. Enforce:
+
+- Exactly **one** approved identity reference image per character (`identity_reference` in `project.json`).
+- If the user provides multiple source images, inspect them all, then produce **one** canonical chibi identity sheet, get it approved, and from then on load **only that single approved image** in every generation call. Never attach the raw source photos or other generated variants as additional references.
+- If identity drift is detected mid-batch, stop, regenerate from the single approved reference, and never "fix" drift by averaging across multiple outputs.
+
+## Clean output requirements
+
+- **Watermark removal**: if the source image carries a watermark, logo, site URL, artist signature stamp, or timestamp overlay, exclude it when isolating the character. The identity reference and every final output must be completely watermark-free. Never reproduce a watermark pattern into generated images.
+- **Transparent background**: every final PNG must have a real alpha channel, fully transparent corners, and no leftover background, floor, shadow, gradient, or chroma fringe (green/white/black edge halos). A white or checkerboard-looking backdrop in a viewer is acceptable only if the file itself is verified transparent; a baked-in background is always a rejection.
+- Apply both rules at the identity-sheet stage first — a dirty reference contaminates the whole set.
+
 ## Workflow
 
 1. Inspect every source image. Label each image as `edit target`, `identity reference`, or `style reference`.
