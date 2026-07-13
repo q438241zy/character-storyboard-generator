@@ -14,7 +14,7 @@ STATUSES = {"planned", "generating", "accepted", "rejected", "skipped-safety", "
 
 
 def load_json(path: Path):
-    with path.open("r", encoding="utf-8") as handle:
+    with path.open("r", encoding="utf-8-sig") as handle:
         return json.load(handle)
 
 
