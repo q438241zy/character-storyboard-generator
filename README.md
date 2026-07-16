@@ -1,5 +1,8 @@
 # Character Storyboard Generator
 
+> 作者: QQ奶茶大神
+
+
 从动画角色图片或真人照片生成透明背景的 Q 版动作与表情分镜 Skill。
 
 - 保留 30 种姿势与 40 种表情，可进行交叉组合。
